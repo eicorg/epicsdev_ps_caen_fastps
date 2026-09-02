@@ -81,7 +81,7 @@ Options:
 
 Output:
 
-- [screens/caen_fastps.bob](screens/caen_fastps.bob)
+- [opi/caen_fastps.bob](screens/caen_fastps.bob)
 
 ## Notes
 
