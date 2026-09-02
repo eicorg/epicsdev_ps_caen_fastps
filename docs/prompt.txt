@@ -1,0 +1,4 @@
+## Initial prompt for caen_fastps
+Add code to implement EPICS PVAccess server, using epicsdev module.
+Use programming manual at docs/'Remote Control Manual Rev3.1.pdf'.
+Create PVs similar to ones, described in IOC db file ioc/fastps.db

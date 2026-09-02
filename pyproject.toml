@@ -1,0 +1,10 @@
+[project]
+name = "caen_fasps"
+version = "0.0.1"
+description = "EPICS PVAccess server for CAEN FAST-PS power supplies"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
