@@ -48,10 +48,9 @@ Implemented command families:
 - `epicsdev` and its runtime dependencies (including `p4p`)
 - Network access to the CAEN FAST-PS device
 
-## Run
+## Install and run
 
-From this project directory:
-
+- `pip install epicsdev_ps_caen_fastps
 - `python -m epicsdev_ps_caen_fastps`
 
 Useful arguments:
