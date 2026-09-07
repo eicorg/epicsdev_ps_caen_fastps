@@ -1,31 +1,31 @@
-# caen_fastps
+# epicsdev_ps_caen_fastps
 
 EPICS PVAccess server for CAEN FAST-PS power supplies, implemented with `epicsdev`.
 
-Main server module: [caen_fastps/__main__.py](caen_fastps/__main__.py)  
-IOC reference DB: [ioc/fastps.db](ioc/fastps.db)  
-Phoebus screen generator: [screens/generate_screen.py](screens/generate_screen.py)
+- Main server module: [epicsdev_ps_caen_fastps/__main__.py](epicsdev_ps_caen_fastps/__main__.py)
+- IOC reference DB: [docs/fastps.db](docs/fastps.db)
+- Phoebus screen generator: [opi/generate_opi.py](opi/generate_opi.py)
 
 ## Features
 
 - TCP remote control interface to FAST-PS (default port `10001`)
-- PV set modeled after IOC DB records in [ioc/fastps.db](ioc/fastps.db)
-- Setpoint control with optional ramp mode:
+- PV set modeled after the IOC records in [docs/fastps.db](docs/fastps.db)
+- Setpoint control with optional ramping:
   - `Voltage`, `Current`, `RampEnable`
-- Output and diagnostics readback:
+- Output and diagnostic readback:
   - `OutputVoltage`, `OutputCurrent`, `GroundCurrent`, `DCLinkVoltage`, `HeatsinkTemp`
-- Status/fault handling:
-  - `StatusMSB`, `StatusLSB`, `StatusReset`, `Enable`
-- Device identity:
-  - `Model`, `Version`
-- Optional limits readback via `MRG` fields:
-  - `Limits`, `LimitMinV`, `LimitMaxV`, `LimitMinI`, `LimitMaxI`
-- Generic command PVs:
+- Status and state control:
+  - `StatusMSB`, `StatusLSB`, `StatusReset`, `Enable`, `RegulationMode`, `Upmode`
+- Ramp-rate control:
+  - `RampRateV`, `RampRateI`
+- Device identity and inferred limits:
+  - `Model`, `Version`, `Limits`
+- Generic command passthrough:
   - `instrCmdS`, `instrCmdR`
 
 ## FAST-PS protocol mapping
 
-Implemented command families (from the Remote Control Manual):
+Implemented command families:
 
 - `VER`
 - `MON`, `MOFF`
@@ -34,45 +34,47 @@ Implemented command families (from the Remote Control Manual):
 - `MWI`, `MWI ?`, `MWIR`
 - `MRESET`
 - `MST`
+- `UPMODE:?`, `UPMODE:<mode>`
+- `MSRV:?`, `MSRV:<value>`
+- `MSRI:?`, `MSRI:<value>`
 - `MRV`, `MRI`, `MGC`, `MRP`, `MRT`
-- `MRG <field>` (optional for limits)
 
 ## Requirements
 
 - Python 3.10+
-- `epicsdev`
-- `p4p`
+- `epicsdev` and its runtime dependencies (including `p4p`)
 - Network access to the CAEN FAST-PS device
 
 ## Run
 
-From this module directory:
+From this project directory:
 
-- `python -m caen_fastps`
+- `python -m epicsdev_ps_caen_fastps`
 
 Useful arguments:
 
-- `--host` FAST-PS IP/hostname (default: `192.168.50.120`)
+- `--host` FAST-PS IP/hostname (default: `130.199.104.57`)
 - `--port` TCP port (default: `10001`)
 - `--timeout` socket timeout in seconds (default: `2.0`)
-- `-d, --device` PV prefix device root (default: `fastps_`)
+- `-d, --device` PV prefix device root (default: `caen_fastps`)
 - `-i, --index` PV prefix index (default: `0`)
-- `--limit-field-min-v`, `--limit-field-max-v`, `--limit-field-min-i`, `--limit-field-max-i`
-  - `MRG` field IDs for limits. Keep `-1` to disable each field.
+- `-v` increase verbosity (`-vv` for more)
+- `-a, --autosave` enable autosave with optional directory
+- `-c, --recall` disable restoring autosaved values on startup
 
 Example:
 
-- `python -m caen_fastps --host 192.168.50.120 --port 10001 -d fastps_ -i 0 -v`
+- `python -m epicsdev_ps_caen_fastps --host 130.199.104.57 -d caen_fastps:`
 
 Default PV prefix:
 
-- `fastps_0:`
+- `caen_fastps0:`
 
-## Screen generation
+## Generate a Phoebus screen
 
-Generate a Phoebus `.bob` file:
+Generate `.bob` OPI file:
 
-- `python screens/generate_screen.py`
+- `python generate_opi.py -t FAST-PS pva://caen_fastps:0:`
 
 Options:
 
@@ -81,10 +83,14 @@ Options:
 
 Output:
 
-- [screens/caen_fastps.bob](screens/caen_fastps.bob)
+- [opi/caen_fastps.bob](opi/caen_fastps.bob)
+
+## Screenshot
+
+- [docs/opi_caen_fastps.jpg](docs/opi_caen_fastps.jpg)
 
 ## Notes
 
-- The server uses common `epicsdev` control PVs (`server`, `sleep`, `status`, `HEARTBEAT`, etc.).
-- `Enable` is synchronized from status bit 0 in `StatusLSB` during polling.
-- For unsupported or custom diagnostics, use `instrCmdS`/`instrCmdR`.
+- The server uses common `epicsdev` control PVs such as `server`, `sleep`, `status`, and `HEARTBEAT`.
+- `Enable` is synchronized from bit 0 of `StatusLSB` during polling.
+- For unsupported/custom diagnostics, use `instrCmdS` and read the reply from `instrCmdR`.

@@ -1,0 +1,283 @@
+
+record(bo, "$(P)$(R)RegulationMode")
+{
+    field(DESC, "Selects between voltage/current reg")
+    field(DTYP, "stream")
+    field(OUT,  "@fastps.proto setRegulationMode L0")
+    field(ZNAM, "V")
+    field(ONAM, "I")
+}
+
+record(ao, "$(P)$(R)Voltage")
+{
+    field(DESC, "Voltage control (in V reg mode)")
+    field(DTYP, "stream")
+    field(EGU,  "V")
+    field(OUT,  "@fastps.proto setVoltage($(P)$(R)) L0")
+    field(PREC, "5")
+}
+
+record(ao, "$(P)$(R)Current")
+{
+    field(DESC, "Current control (in V reg mode)")
+    field(DTYP, "stream")
+    field(EGU,  "A")
+    field(OUT,  "@fastps.proto setCurrent($(P)$(R)) L0")
+    field(PREC, "5")
+}
+
+record(bo, "$(P)$(R)StatusReset")
+{
+    field(DESC, "Reset status register/clear faults")
+    field(DTYP, "stream")
+    field(OUT,  "@fastps.proto resetStatus L0")
+}
+
+record(bo, "$(P)$(R)RampEnable")
+{
+    field(DESC, "Enables/disables ramping to setpoint")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    field(DOL,  "0")
+    field(PINI, "YES")
+}
+
+################################################################################
+record(bi, "$(P)$(R)ReadbackPoll_")
+{
+    field(DESC, "Head of readback chain")
+    field(FLNK, "$(P)$(R)OutputVoltage")
+    field(PINI, "YES")
+    field(INP,  "0")
+    field(SCAN, "1 second")
+}
+
+record(ai, "$(P)$(R)OutputVoltage")
+{
+    field(DESC, "Output voltage")
+    field(DTYP, "stream")
+    field(EGU,  "V")
+    field(FLNK, "$(P)$(R)OutputCurrent")
+    field(INP,  "@fastps.proto getOutputVoltage L0")
+    field(PREC, "5")
+}
+
+record(ai, "$(P)$(R)OutputCurrent")
+{
+    field(DESC, "Output current")
+    field(DTYP, "stream")
+    field(EGU,  "A")
+    field(FLNK, "$(P)$(R)GroundCurrent")
+    field(INP,  "@fastps.proto getOutputCurrent L0")
+    field(PREC, "5")
+}
+
+record(ai, "$(P)$(R)GroundCurrent")
+{
+    field(DESC, "Ground current")
+    field(DTYP, "stream")
+    field(EGU,  "A")
+    field(FLNK, "$(P)$(R)DCLinkVoltage")
+    field(INP,  "@fastps.proto getGroundCurrent L0")
+    field(PREC, "3")
+}
+
+record(ai, "$(P)$(R)DCLinkVoltage")
+{
+    field(DESC, "DC Link voltage")
+    field(DTYP, "stream")
+    field(EGU,  "V")
+    field(FLNK, "$(P)$(R)HeatsinkTemp")
+    field(INP,  "@fastps.proto getDCLinkVoltage L0")
+    field(PREC, "2")
+}
+
+record(ai, "$(P)$(R)HeatsinkTemp")
+{
+    field(DESC, "Heatsink temperature")
+    field(DTYP, "stream")
+    field(EGU,  "deg C")
+    field(FLNK, "$(P)$(R)StatusMSB")
+    field(INP,  "@fastps.proto getTemperature L0")
+    field(PREC, "2")
+}
+
+record(mbbiDirect, "$(P)$(R)StatusMSB")
+{
+    field(DESC, "Status MSB")
+    field(DTYP, "stream")
+    field(FLNK, "$(P)$(R)StatusLSB")
+    field(INP,  "@fastps.proto getStatusMSB L0")
+}
+
+record(mbbiDirect, "$(P)$(R)StatusLSB")
+{
+    field(DESC, "Status LSB")
+    field(DTYP, "stream")
+    field(FLNK, "$(P)$(R)Limits")
+    field(INP,  "@fastps.proto getStatusLSB L0")
+}
+
+record (aai, "$(P)$(R)Limits")
+{
+    field(DESC, "Limits")
+    field(DTYP, "stream")
+
+    field(FTVL, "FLOAT")
+    field(NELM, "4")
+    field(INP,  "@fastps.proto getLimits L0")
+    field(FLNK, "$(P)$(R)LimitMinV")
+}
+
+record (ai, "$(P)$(R)LimitMinV")
+{
+    field(DESC, "Low limit of voltage")
+    field(DTYP, "stream")
+    field(EGU,  "V")
+    field(FLNK, "$(P)$(R)LimitMaxV")
+    field(INP, "@fastps.proto getMinV L0")
+}
+
+record (ai, "$(P)$(R)LimitMaxV")
+{
+    field(DESC, "High limit of voltage")
+    field(DTYP, "stream")
+    field(EGU,  "V")
+    field(FLNK, "$(P)$(R)LimitMinI")
+    field(INP, "@fastps.proto getMaxV L0")
+}
+
+record (ai, "$(P)$(R)LimitMinI")
+{
+    field(DESC, "Low limit of current")
+    field(DTYP, "stream")
+    field(EGU,  "A")
+    field(FLNK, "$(P)$(R)LimitMaxI")
+    field(INP, "@fastps.proto getMinI L0")
+}
+
+record (ai, "$(P)$(R)LimitMaxI")
+{
+    field(DESC, "High limit of current")
+    field(DTYP, "stream")
+    field(EGU,  "A")
+    field(FLNK, "$(P)$(R)LimitMinV_")
+    field(INP, "@fastps.proto getMaxI L0")
+}
+
+record (calcout, "$(P)$(R)LimitMinV_")
+{
+    field(DESC, "Low limit for Voltage")
+    field(INPA, "$(P)$(R)LimitMinV")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)Voltage.LOPR")
+    field(FLNK, "$(P)$(R)LimitMinVOutput_")
+}
+
+record (calcout, "$(P)$(R)LimitMinVOutput_")
+{
+    field(DESC, "Low limit for output Voltage")
+    field(INPA, "$(P)$(R)LimitMinV")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)OutputVoltage.LOPR")
+    field(FLNK, "$(P)$(R)LimitMaxV_")
+}
+
+record (calcout, "$(P)$(R)LimitMaxV_")
+{
+    field(DESC, "High limit for Voltage")
+    field(INPA, "$(P)$(R)LimitMaxV")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)Voltage.HOPR")
+    field(FLNK, "$(P)$(R)LimitMaxVOutput_")
+}
+
+record (calcout, "$(P)$(R)LimitMaxVOutput_")
+{
+    field(DESC, "High limit for output Voltage")
+    field(INPA, "$(P)$(R)LimitMaxV")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)OutputVoltage.HOPR")
+    field(FLNK, "$(P)$(R)LimitMinI_")
+}
+
+record (calcout, "$(P)$(R)LimitMinI_")
+{
+    field(DESC, "Low limit for Current")
+    field(INPA, "$(P)$(R)LimitMinI")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)Current.LOPR")
+    field(FLNK, "$(P)$(R)LimitMinIOutput_")
+}
+
+record (calcout, "$(P)$(R)LimitMinIOutput_")
+{
+    field(DESC, "Low limit for output Current")
+    field(INPA, "$(P)$(R)LimitMinI")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)OutputCurrent.LOPR")
+    field(FLNK, "$(P)$(R)LimitMaxI_")
+}
+
+record (calcout, "$(P)$(R)LimitMaxI_")
+{
+    field(DESC, "High limit for Current")
+    field(INPA, "$(P)$(R)LimitMaxI")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)Current.HOPR")
+    field(FLNK, "$(P)$(R)LimitMaxIOutput_")
+}
+
+record (calcout, "$(P)$(R)LimitMaxIOutput_")
+{
+    field(DESC, "High limit for output Current")
+    field(INPA, "$(P)$(R)LimitMaxI")
+    field(CALC,  "A")
+    field(OUT,  "$(P)$(R)OutputCurrent.HOPR")
+    field(FLNK, "$(P)$(R)Model")
+}
+
+record (stringin, "$(P)$(R)Model")
+{
+    field(DESC, "Model")
+    field(DTYP, "stream")
+    field(INP,  "@fastps.proto getModel L0")
+    field(FLNK, "$(P)$(R)Version")
+}
+
+record (stringin, "$(P)$(R)Version")
+{
+    field(DESC, "Version")
+    field(DTYP, "stream")
+    field(INP,  "@fastps.proto getVersion L0")
+    field(FLNK, "$(P)$(R)_EnableInit")
+}
+
+record(mbbiDirect, "$(P)$(R)_EnableInit")
+{
+    field(DESC, "Initialization for Enable")
+    field(DTYP, "stream")
+    field(PINI, "YES")
+    field(INP,  "@fastps.proto getStatusLSB L0")
+    field(FLNK, "$(P)$(R)_EnableInitCalc")
+}
+
+record(calcout, "$(P)$(R)_EnableInitCalc")
+{
+    field(DESC, "Initialization for Enable")
+    field(INPA, "$(P)$(R)StatusLSB")
+    field(CALC, "A & 0x1")
+    field(OUT,  "$(P)$(R)Enable.VAL")
+}
+
+record(bo, "$(P)$(R)Enable")
+{
+    field(DESC, "Turn supply off/on")
+    field(DTYP, "stream")
+    field(OUT,  "@fastps.proto setEnable L0")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    # the field gets initialized from status, clear UDF
+    field(STAT, "NO_ALARM")
+    field(SEVR, "NO_ALARM")
+}
