@@ -2,6 +2,9 @@
 
 EPICS PVAccess server for CAEN FAST-PS power supplies, implemented with `epicsdev`.
 
+Main server module: [caen_fastps/__main__.py](caen_fastps/__main__.py)  
+IOC reference DB: [ioc/fastps.db](ioc/fastps.db)  
+Phoebus screen generator: [opi/generate_screen.py](screens/generate_screen.py)
 - Main server module: [epicsdev_ps_caen_fastps/__main__.py](epicsdev_ps_caen_fastps/__main__.py)
 - IOC reference DB: [docs/fastps.db](docs/fastps.db)
 - Phoebus screen generator: [opi/generate_opi.py](opi/generate_opi.py)
