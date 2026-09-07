@@ -1,6 +1,6 @@
 [project]
-name = "caen_fasps"
-version = "0.0.1"
+name = "epicsdev_ps_caen_fastps"
+version = "0.0.2"
 description = "EPICS PVAccess server for CAEN FAST-PS power supplies"
 dependencies = []
 
