@@ -1,6 +1,6 @@
 [project]
 name = "epicsdev_ps_caen_fastps"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Andrey Sukhanov", email="sukhanov@bnl.gov" },
 ]

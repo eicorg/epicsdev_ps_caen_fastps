@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <display version="2.0.0">
+    <name>fastps</name>
+    <width>1080</width>
+    <height>660</height>
+    <widget type="label" version="2.0.0">
+      <name>title</name>
+      <x>20</x>
+      <y>10</y>
+      <width>170</width>
+      <height>30</height>
+      <text>CAEN FAST-PS</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Model_lbl</name>
+      <x>200</x>
+      <y>14</y>
+      <width>40</width>
+      <height>20</height>
+      <text>Model:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Model</name>
+      <x>245</x>
+      <y>14</y>
+      <width>80</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Model</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Version_lbl</name>
+      <x>340</x>
+      <y>14</y>
+      <width>25</width>
+      <height>20</height>
+      <text>FW:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Version</name>
+      <x>365</x>
+      <y>14</y>
+      <width>40</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Version</pv_name>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>dateTime</name>
+      <x>420</x>
+      <y>14</y>
+      <width>130</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:dateTime</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>srvStatus_lbl</name>
+      <x>20</x>
+      <y>45</y>
+      <width>100</width>
+      <height>20</height>
+      <text>Server:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>srvStatus</name>
+      <x>70</x>
+      <y>45</y>
+      <width>790</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:status</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>state_lbl</name>
+      <x>20</x>
+      <y>85</y>
+      <width>65</width>
+      <height>20</height>
+      <text>Run/Stop:</text>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>server</name>
+      <x>90</x>
+      <y>85</y>
+      <width>110</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:server</pv_name>
+      <items>
+        <item>Start</item>
+        <item>Stop</item>
+        <item>Clear</item>
+        <item>Exit</item>
+        <item>Started</item>
+        <item>Stopped</item>
+        <item>Exited</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>upmode_lbl</name>
+      <x>215</x>
+      <y>85</y>
+      <width>90</width>
+      <height>20</height>
+      <text>UpMode:</text>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Upmode</name>
+      <x>285</x>
+      <y>85</y>
+      <width>120</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Upmode</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>sleep_lbl</name>
+      <x>410</x>
+      <y>85</y>
+      <width>40</width>
+      <height>20</height>
+      <text>Sleep:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>sleep</name>
+      <x>450</x>
+      <y>85</y>
+      <width>50</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:sleep</pv_name>
+      <format>1</format>
+      <precision>1</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>cycle_lbl</name>
+      <x>520</x>
+      <y>85</y>
+      <width>40</width>
+      <height>20</height>
+      <text>Cycle:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>cycleTime</name>
+      <x>560</x>
+      <y>85</y>
+      <width>60</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:cycleTime</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>hb_lbl</name>
+      <x>640</x>
+      <y>85</y>
+      <width>30</width>
+      <height>20</height>
+      <text>HB:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HEARTBEAT</name>
+      <x>670</x>
+      <y>85</y>
+      <width>70</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:HEARTBEAT</pv_name>
+      <format>1</format>
+      <precision>0</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Enable_lbl</name>
+      <x>20</x>
+      <y>125</y>
+      <width>45</width>
+      <height>20</height>
+      <text>Enable:</text>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>Enable</name>
+      <x>70</x>
+      <y>125</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Enable</pv_name>
+      <items>
+        <item>Off</item>
+        <item>On</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RegulationMode_lbl</name>
+      <x>180</x>
+      <y>125</y>
+      <width>90</width>
+      <height>20</height>
+      <text>Regulate:</text>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>RegulationMode</name>
+      <x>250</x>
+      <y>125</y>
+      <width>50</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:RegulationMode</pv_name>
+      <items>
+        <item>V</item>
+        <item>I</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RampEnable_lbl</name>
+      <x>340</x>
+      <y>125</y>
+      <width>40</width>
+      <height>20</height>
+      <text>Ramp:</text>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>RampEnable</name>
+      <x>385</x>
+      <y>125</y>
+      <width>80</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:RampEnable</pv_name>
+      <items>
+        <item>Off</item>
+        <item>On</item>
+      </items>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Voltage_lbl</name>
+      <x>20</x>
+      <y>165</y>
+      <width>80</width>
+      <height>20</height>
+      <text>Voltage SP:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>Voltage</name>
+      <x>110</x>
+      <y>165</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Voltage</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Current_lbl</name>
+      <x>220</x>
+      <y>165</y>
+      <width>80</width>
+      <height>20</height>
+      <text>Current SP:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>Current</name>
+      <x>305</x>
+      <y>165</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Current</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RampRateV_lbl</name>
+      <x>20</x>
+      <y>185</y>
+      <width>85</width>
+      <height>20</height>
+      <text>RampRateV:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>RampRateV</name>
+      <x>110</x>
+      <y>185</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:RampRateV</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>RampRateI_lbl</name>
+      <x>220</x>
+      <y>185</y>
+      <width>80</width>
+      <height>20</height>
+      <text>RampRateI:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>RampRateI</name>
+      <x>305</x>
+      <y>185</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:RampRateI</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>OutputVoltage_lbl</name>
+      <x>20</x>
+      <y>205</y>
+      <width>75</width>
+      <height>20</height>
+      <text>Output V:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>OutputVoltage</name>
+      <x>110</x>
+      <y>205</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:OutputVoltage</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>OutputCurrent_lbl</name>
+      <x>220</x>
+      <y>205</y>
+      <width>75</width>
+      <height>20</height>
+      <text>Output I:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>OutputCurrent</name>
+      <x>305</x>
+      <y>205</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:OutputCurrent</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>GroundCurrent_lbl</name>
+      <x>420</x>
+      <y>205</y>
+      <width>75</width>
+      <height>20</height>
+      <text>Ground I [A]:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>GroundCurrent</name>
+      <x>500</x>
+      <y>205</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:GroundCurrent</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>DCLinkVoltage_lbl</name>
+      <x>620</x>
+      <y>205</y>
+      <width>70</width>
+      <height>20</height>
+      <text>DC-Link [V]:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>DCLinkVoltage</name>
+      <x>695</x>
+      <y>205</y>
+      <width>95</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:DCLinkVoltage</pv_name>
+      <format>3</format>
+      <precision>3</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>HeatsinkTemp_lbl</name>
+      <x>800</x>
+      <y>205</y>
+      <width>70</width>
+      <height>20</height>
+      <text>Heatsink:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>HeatsinkTemp</name>
+      <x>870</x>
+      <y>205</y>
+      <width>60</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:HeatsinkTemp</pv_name>
+      <format>1</format>
+      <precision>1</precision>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>Limits_lbl</name>
+      <x>20</x>
+      <y>225</y>
+      <width>60</width>
+      <height>20</height>
+      <text>Limits:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>Limits</name>
+      <x>80</x>
+      <y>225</y>
+      <width>120</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:Limits</pv_name>
+      <format>1</format>
+      <precision>0</precision>
+    </widget>
+    <widget type="databrowser" version="2.0.0">
+      <name>Plot</name>
+      <x>320</x>
+      <y>225</y>
+      <width>680</width>
+      <height>350</height>
+      <file>caen_fastps.plt</file>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>StatusMSB_lbl</name>
+      <x>20</x>
+      <y>305</y>
+      <width>90</width>
+      <height>20</height>
+      <text>StatusMSB bits</text>
+    </widget>
+    <widget type="byte_monitor" version="2.0.0">
+      <name>MSBBits</name>
+      <x>20</x>
+      <y>325</y>
+      <width>90</width>
+      <height>240</height>
+      <pv_name>pva://caen_fastps:0:StatusMSB</pv_name>
+      <numBits>16</numBits>
+      <horizontal>false</horizontal>
+      <on_color>
+        <color red="255" blue="0" green="0" alpha="255"/>
+      </on_color>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit0</name>
+      <x>40</x>
+      <y>325</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 31</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit1</name>
+      <x>40</x>
+      <y>340</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 30</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit2</name>
+      <x>40</x>
+      <y>355</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 29: over-power</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit3</name>
+      <x>40</x>
+      <y>370</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 28</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit4</name>
+      <x>40</x>
+      <y>385</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 27: ext.interlock #2</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit5</name>
+      <x>40</x>
+      <y>400</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 26: ext.interlock #1</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit6</name>
+      <x>40</x>
+      <y>415</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 25: high ripple</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit7</name>
+      <x>40</x>
+      <y>430</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 24: regulation fault</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit8</name>
+      <x>40</x>
+      <y>445</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 23: earth fuse fault</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit9</name>
+      <x>40</x>
+      <y>460</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 22: earth leakage fault</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit10</name>
+      <x>40</x>
+      <y>475</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 21: DC-Link fault</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit11</name>
+      <x>40</x>
+      <y>490</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 20: over-temperature</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit12</name>
+      <x>40</x>
+      <y>505</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 19</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit13</name>
+      <x>40</x>
+      <y>520</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 18: crowbar</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit14</name>
+      <x>40</x>
+      <y>535</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 17: overcurrent</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit15</name>
+      <x>40</x>
+      <y>550</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 16</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>StatusLSB_lbl</name>
+      <x>180</x>
+      <y>305</y>
+      <width>90</width>
+      <height>20</height>
+      <text>StatusLSB bits</text>
+    </widget>
+    <widget type="byte_monitor" version="2.0.0">
+      <name>LSBBits</name>
+      <x>180</x>
+      <y>325</y>
+      <width>90</width>
+      <height>240</height>
+      <pv_name>pva://caen_fastps:0:StatusLSB</pv_name>
+      <numBits>16</numBits>
+      <horizontal>false</horizontal>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit0</name>
+      <x>200</x>
+      <y>325</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 15:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit1</name>
+      <x>200</x>
+      <y>340</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 14:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit2</name>
+      <x>200</x>
+      <y>355</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 13: waveform</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit3</name>
+      <x>200</x>
+      <y>370</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 12: ramping</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit4</name>
+      <x>200</x>
+      <y>385</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 11:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit5</name>
+      <x>200</x>
+      <y>400</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 10:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit6</name>
+      <x>200</x>
+      <y>415</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 9:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit7</name>
+      <x>200</x>
+      <y>430</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 8:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit8</name>
+      <x>200</x>
+      <y>445</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 7: update mode [1]</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit9</name>
+      <x>200</x>
+      <y>460</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 6: update mode [0]</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit10</name>
+      <x>200</x>
+      <y>475</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 5: regulation mode</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit11</name>
+      <x>200</x>
+      <y>490</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 4:</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit12</name>
+      <x>200</x>
+      <y>505</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 3: control mode [1]</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit13</name>
+      <x>200</x>
+      <y>520</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 2: control mode [0]</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit14</name>
+      <x>200</x>
+      <y>535</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 1: fault indicator</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>bit15</name>
+      <x>200</x>
+      <y>550</y>
+      <width>140</width>
+      <height>15</height>
+      <text>bit 0: ON/OFF</text>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>cmd_lbl</name>
+      <x>20</x>
+      <y>585</y>
+      <width>70</width>
+      <height>20</height>
+      <text>Command:</text>
+    </widget>
+    <widget type="textentry" version="2.0.0">
+      <name>instrCmdS</name>
+      <x>90</x>
+      <y>585</y>
+      <width>230</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:instrCmdS</pv_name>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>reply_lbl</name>
+      <x>330</x>
+      <y>585</y>
+      <width>45</width>
+      <height>20</height>
+      <text>Reply:</text>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>instrCmdR</name>
+      <x>375</x>
+      <y>585</y>
+      <width>685</width>
+      <height>20</height>
+      <pv_name>pva://caen_fastps:0:instrCmdR</pv_name>
+      <wrap_words>false</wrap_words>
+    </widget>
+  </display>

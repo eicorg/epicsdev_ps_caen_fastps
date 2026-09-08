@@ -1,5 +1,5 @@
 """Generate a simple Phoebus screen for CAEN FAST-PS PVs."""
-__version__ = 'v0.0.1 2026-09-06'
+__version__ = 'v0.0.4 2026-09-08'
 # pylint: disable=invalid-name,broad-exception-caught
 
 import argparse
@@ -108,25 +108,46 @@ def main() -> None:
         "Limits_lbl": w.Label("Limits_lbl", "Limits:", 20, y, 60, 20),
         "Limits": w.TextUpdate("Limits", f"{prefix}Limits", 80, y, 120, 20),
     })
-    widgets.update({"plot": w.DataBrowser("Plot", "plot.plt", 220, y, 680, 350)})
-
+    widgets.update({"plot": w.DataBrowser("Plot", "caen_fastps.plt", 320, y, 680, 350)})
     y += 80
+
     dy = 15
-    widgets.update({
-        "StatusBits_lbl": w.Label("StatusBits_lbl", "StatusLSB bits", 20, y, 90, 20),
-    })
+    ysame = y
+
+    # MSB Status bits
+    x = 20
+    widgets["StatusMSBBits"] = w.Label("StatusMSB_lbl", "StatusMSB bits", x, y, 90, 20)
     y += 20
-    widgets.update({
-        "LSBBits": w.ByteMonitor("LSBBits", f"{prefix}StatusLSB", 20, y, 90, 16*dy),
-    })
-    bitLabels = [
+    widgets["MSBBits"] = w.ByteMonitor("MSBBits", f"{prefix}StatusMSB", 20, y, 90, 16*dy)
+    widgets["MSBBits"].num_bits(16)
+    widgets["MSBBits"].horizontal(False)
+    widgets["MSBBits"].on_color(255, 0, 0)
+    bitLabelsMSB = [
+        "bit 31", "bit 30", "bit 29: over-power", "bit 28", "bit 27: ext.interlock #2",
+        "bit 26: ext.interlock #1", "bit 25: high ripple", "bit 24: regulation fault",
+        "bit 23: earth fuse fault", "bit 22: earth leakage fault", "bit 21: DC-Link fault",
+        "bit 20: over-temperature", "bit 19", "bit 18: crowbar", "bit 17: overcurrent", 
+        "bit 16"]
+    for i, lblName in enumerate(bitLabelsMSB):
+        widgets[f"MSBbit{i}"] = w.Label(f"bit{i}", lblName, x+20, y, 140, dy)
+        y += dy
+
+    # LSB Status bits
+    y = ysame
+    x = 180
+    widgets["StatusLSBBits"] = w.Label("StatusLSB_lbl", "StatusLSB bits", x, y, 90, 20)
+    y += 20
+    widgets["LSBBits"] = w.ByteMonitor("LSBBits", f"{prefix}StatusLSB", x, y, 90, 16*dy)
+    widgets["LSBBits"].num_bits(16)
+    widgets["LSBBits"].horizontal(False)
+    bitLabelsLSB = [
         "bit 0: ON/OFF", "bit 1: fault indicator", "bit 2: control mode [0]",
         "bit 3: control mode [1]", "bit 4:", "bit 5: regulation mode",
         "bit 6: update mode [0]", "bit 7: update mode [1]", "bit 8:", "bit 9:",
         "bit 10:", "bit 11:", "bit 12: ramping", "bit 13: waveform", "bit 14:", "bit 15:"]
-    bitLabels.reverse()  # reverse order for Phoebus ByteMonitor widget
-    for i, lblName in enumerate(bitLabels):
-        widgets[f"bit{i}"] = w.Label(f"bit{i}", lblName, 40, y, 140, dy)
+    bitLabelsLSB.reverse()
+    for i, lblName in enumerate(bitLabelsLSB):
+        widgets[f"LSBbit{i}"] = w.Label(f"bit{i}", lblName, x+20, y, 140, dy)
         y += dy
 
     y += 20
@@ -155,9 +176,6 @@ def main() -> None:
     for pv_name in ("HeatsinkTemp", "sleep"):
         widgets[pv_name].format("Decimal")
         widgets[pv_name].precision(1)
-
-    widgets["LSBBits"].num_bits(16)
-    widgets["LSBBits"].horizontal(False)
 
     widgets["instrCmdR"].wrap_words(False)
 

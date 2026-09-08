@@ -1,6 +1,6 @@
 """EPICS PVAccess server for CAEN FAST-PS power supply."""
 # pylint: disable=invalid-name,broad-exception-caught
-__version__ = 'v0.0.3 2026-09-06'
+__version__ = 'v0.0.4 2026-09-08'
 
 import argparse
 import re
@@ -123,9 +123,7 @@ def _query_status():
         status_msb = (status32 >> 16) & 0xFFFF
         edev.publish('StatusLSB', status_lsb, ifChanged=True)
         edev.publish('StatusMSB', status_msb, ifChanged=True)
-        #edev.publish('_EnableInit', status_lsb, ifChanged=True)
         enable = 1 if (status_lsb & 0x1) else 0
-        #edev.publish('_EnableInitCalc', enable, ifChanged=True)
         edev.publish('Enable', enable, ifChanged=True)
         reply = _send('UPMODE:?')
         mode = reply.split(':')[-1].strip()
@@ -136,26 +134,30 @@ def _query_status():
         reply = _send('MSRI:?')
         rate_i = _parse_first_float(reply)
         edev.publish('RampRateI', rate_i, ifChanged=True)
+        loop = _query_text('LOOP:?', 'V').upper()
+        edev.publish('RegulationMode', loop[-1], ifChanged=True)
 
     except Exception:
         handle_exception('in _query_status')
 
-def set_regulation_mode(value, *_):
+def set_regulationMode(value, *_):
     try:
+        if edev.pvv('Enable') == 1:
+            raise RuntimeError('Cannot change regulation mode while supply is enabled')
         mode = str(value).strip().upper()
         mode = 'I' if mode.startswith('I') or mode == '1' else 'V'
-        reply = _send(f'LOOP {mode}', updateStatus=True)
+        reply = _send(f'LOOP:{mode}', updateStatus=True)
         if not _is_ack(reply):
             raise RuntimeError(f'Unexpected reply for LOOP: {reply}')
         edev.publish('RegulationMode', mode, ifChanged=True)
     except Exception:
-        handle_exception('in set_regulation_mode')
+        handle_exception('in set_regulationMode')
 
 
 def _set_setpoint(value: float, kind: str):
     use_ramp = str(edev.pvv('RampEnable')).upper() in ('1', 'ON', 'TRUE')
     cmd = f'MW{kind}R:{value}' if use_ramp else f'MW{kind}:{value}'
-    print(f'Setting {kind} setpoint to {value} (ramp: {use_ramp}, cmd: {cmd})')
+    edev.printv(f'Setting {kind} setpoint to {value} (ramp: {use_ramp}, cmd: {cmd})')
     reply = _send(cmd, updateStatus=True)
     if not _is_ack(reply):
         raise RuntimeError(f'Unexpected reply for {cmd}: {reply}')
@@ -249,9 +251,11 @@ def myPVDefs():
         ['dateTime', 'Server local date/time', 'N/A'],
         ['host', 'FAST-PS host', pargs.host],
         ['port', 'FAST-PS TCP port', pargs.port, {T: 'u32'}],
-        ['RegulationMode', 'Selects between voltage/current regulation', ['V', 'I'], {F: 'WD', SET: set_regulation_mode}],
-        ['Voltage', 'Voltage control (V regulation mode)', 0.0, {F: 'W', U: 'V', SET: set_voltage}],
-        ['Current', 'Current control (I regulation mode)', 0.0, {F: 'W', U: 'A', SET: set_current}],
+        ['RegulationMode', 'Selects between voltage/current regulation', ['V', 'I'], {F: 'WD', SET: set_regulationMode}],
+        ['Voltage', 'Voltage control (V regulation mode)', 0.0, {F: 'W', U: 'V',
+            LL: SetpointLimits[C_.model][0], LH: SetpointLimits[C_.model][1], SET: set_voltage}],
+        ['Current', 'Current control (I regulation mode)', 0.0, {F: 'W', U: 'A',
+            LL: SetpointLimits[C_.model][2], LH: SetpointLimits[C_.model][3], SET: set_current}],
         ['StatusReset', 'Reset status register / clear faults', 0, {F: 'W', T: 'u8', LL: 0, LH: 1, SET: set_status_reset}],
         ['RampEnable', 'Enable/disable ramp to setpoint', ['Off', 'On'], {F: 'WD'}],
         ['OutputVoltage', 'Output voltage', 0.0, {U: 'V'}],
@@ -278,18 +282,10 @@ def myPVDefs():
 
 def refresh_static():
     """Read static identification and setpoint values."""
-    ver = _query_text('VER', 'N/A')
-    C_.model = ver.split(':')[1]
     edev.publish('Model', C_.model)
     fw = ver.rsplit(':',1)[-1]
     edev.publish('Version', fw)
     edev.publish('Limits', SetpointLimits[C_.model])
-
-    loop = _query_text('LOOP ?', 'V').upper()
-    edev.publish('RegulationMode', 'I' if 'I' in loop else 'V', ifChanged=True)
-
-    edev.publish('Voltage', _query_float('MWV ?', 0.0), ifChanged=True)
-    edev.publish('Current', _query_float('MWI ?', 0.0), ifChanged=True)
 
 def poll():
     """Main polling hook."""
@@ -309,7 +305,6 @@ def serverStateChanged(newState: str):
     """Callback for server state transitions."""
     if newState == 'Start':
         edev.printi('Start requested')
-        refresh_static()
         _query_status()
     elif newState == 'Stop':
         edev.printi('Stop requested')
@@ -339,6 +334,9 @@ if __name__ == '__main__':
     pargs.prefix = f'{pargs.device}{pargs.index}:'
 
     _connect()
+    ver = _query_text('VER', 'N/A')
+    C_.model = ver.split(':')[1]
+
     C_.PvDefs = myPVDefs()
 
     PVs = edev.init_epicsdev(
@@ -351,6 +349,7 @@ if __name__ == '__main__':
         pargs.recall,
         pargs.putlogPV,
     )
+    refresh_static()
 
     edev.publish('VERSION', __version__)
     edev.set_server('Start')
