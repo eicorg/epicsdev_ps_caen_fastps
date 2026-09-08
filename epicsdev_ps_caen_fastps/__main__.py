@@ -1,6 +1,6 @@
 """EPICS PVAccess server for CAEN FAST-PS power supply."""
 # pylint: disable=invalid-name,broad-exception-caught
-__version__ = 'v0.0.2 2026-09-06'
+__version__ = 'v0.0.3 2026-09-06'
 
 import argparse
 import re

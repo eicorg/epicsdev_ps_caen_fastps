@@ -34,8 +34,8 @@
         <green>0</green>
         <blue>0</blue>
       </color>
-      <min>-0.10050000000000002</min>
-      <max>2.1105</max>
+      <min>-5.82E-4</min>
+      <max>0.002102</max>
       <grid>false</grid>
       <autoscale>true</autoscale>
       <log_scale>false</log_scale>
@@ -91,7 +91,7 @@
       <point_size>2</point_size>
       <waveform_index>0</waveform_index>
       <period>0.0</period>
-      <ring_size>5000</ring_size>
+      <ring_size>50000</ring_size>
       <request>OPTIMIZED</request>
     </pv>
     <pv>
@@ -111,7 +111,7 @@
       <point_size>2</point_size>
       <waveform_index>0</waveform_index>
       <period>0.0</period>
-      <ring_size>5000</ring_size>
+      <ring_size>50000</ring_size>
       <request>OPTIMIZED</request>
     </pv>
   </pvlist>
