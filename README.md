@@ -1,16 +1,7 @@
 # epicsdev_ps_caen_fastps
 
 EPICS PVAccess server for CAEN FAST-PS power supplies, implemented with `epicsdev`.
-
-Main server module: [caen_fastps/__main__.py](caen_fastps/__main__.py)  
-IOC reference DB: [ioc/fastps.db](ioc/fastps.db)  
-Phoebus screen generator: [opi/generate_screen.py](screens/generate_screen.py)
-- Main server module: [epicsdev_ps_caen_fastps/__main__.py](epicsdev_ps_caen_fastps/__main__.py)
-- IOC reference DB: [docs/fastps.db](docs/fastps.db)
-- Phoebus screen generator: [opi/generate_opi.py](opi/generate_opi.py)
-
 ## Features
-
 - TCP remote control interface to FAST-PS (default port `10001`)
 - PV set modeled after the IOC records in [docs/fastps.db](docs/fastps.db)
 - Setpoint control with optional ramping:
@@ -26,22 +17,6 @@ Phoebus screen generator: [opi/generate_screen.py](screens/generate_screen.py)
 - Generic command passthrough:
   - `instrCmdS`, `instrCmdR`
 
-## FAST-PS protocol mapping
-
-Implemented command families:
-
-- `VER`
-- `MON`, `MOFF`
-- `LOOP`, `LOOP ?`
-- `MWV`, `MWV ?`, `MWVR`
-- `MWI`, `MWI ?`, `MWIR`
-- `MRESET`
-- `MST`
-- `UPMODE:?`, `UPMODE:<mode>`
-- `MSRV:?`, `MSRV:<value>`
-- `MSRI:?`, `MSRI:<value>`
-- `MRV`, `MRI`, `MGC`, `MRP`, `MRT`
-
 ## Requirements
 
 - Python 3.10+
@@ -50,7 +25,7 @@ Implemented command families:
 
 ## Install and run
 
-- `pip install epicsdev_ps_caen_fastps
+- `pip install epicsdev_ps_caen_fastps`
 - `python -m epicsdev_ps_caen_fastps`
 
 Useful arguments:
