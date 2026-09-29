@@ -8,7 +8,7 @@ from pathlib import Path
 import phoebusgen.screen
 import phoebusgen.widget
 
-DEFAULT_PREFIX = "$(DEV):"
+DEFAULT_PREFIX = "caen_fastps:0:"
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -16,11 +16,8 @@ def _parse_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         epilog=__version__,
     )
-    parser.add_argument("-t", "--title", default="CAEN FAST-PS", help="Screen title")
-    parser.add_argument(
-        "prefix",
-        nargs="?",
-        default=DEFAULT_PREFIX,
+    parser.add_argument("-t", "--title", default="FAST-PS", help="Screen title")
+    parser.add_argument("prefix", nargs="?", default=f'pva://{DEFAULT_PREFIX}',
         help=(
             "PV prefix used for all widget PV names. "
             "If not specified, the prefix is `$(DEV):`, it can be defined in screen macros."
@@ -47,7 +44,7 @@ def main() -> None:
         "Model": w.TextUpdate("Model", f"{prefix}Model", 245, 14, 80, 20),
         "Version_lbl": w.Label("Version_lbl", "FW:", 340, 14, 25, 20),
         "Version": w.TextUpdate("Version", f"{prefix}Version", 365, 14, 40, 20),
-        "dateTime": w.TextUpdate("dateTime", f"{prefix}dateTime", 420, 14, 130, 20),
+        "dateTime": w.TextUpdate("dateTime", f"{prefix}dateTime", 420, 14, 70, 20),
     }
     y = 45
     widgets.update({
@@ -77,6 +74,19 @@ def main() -> None:
         "RampEnable": w.ComboBox("RampEnable", f"{prefix}RampEnable", 385, y, 80, 20),
     })
     y += 40
+    dy = 100
+    widgets.update({
+        "OutputVoltage1_lbl": w.Label("OutputVoltage1_lbl", "Output Voltage:", 20, y, 100, 20),
+        "OutputCurrent1_lbl": w.Label("OutputCurrent1_lbl", "Output Current:", 220, y, 100, 20),
+        "OutputVoltage1": w.Meter("OutputVoltage1", f"{prefix}OutputVoltage", 20, y+20, 200, dy),
+        "OutputCurrent1": w.Meter("OutputCurrent1", f"{prefix}OutputCurrent", 220, y+20, 200, dy),
+    })
+    y += dy + 20
+    widgets.update({
+        "VSlider": w.ScaledSlider("VSlider", f"{prefix}Voltage", 20, y, 200, 40),
+        "ISlider": w.ScaledSlider("ISlider", f"{prefix}Current", 220, y, 200, 40),
+    })
+    y += 40
     widgets.update({
         "Voltage_lbl": w.Label("Voltage_lbl", "Voltage SP:", 20, y, 80, 20),
         "Voltage": w.TextEntry("Voltage", f"{prefix}Voltage", 110, y, 95, 20),
@@ -85,29 +95,32 @@ def main() -> None:
     })
     y += 20
     widgets.update({
+        "VoltageRbk_lbl": w.Label("VoltageRbk_lbl", "VoltageRbk:", 20, y, 80, 20),
+        "VoltageRbk": w.TextUpdate("VoltageRbk", f"{prefix}VoltageRbk", 110, y, 95, 20),
+        "CurrentRbk_lbl": w.Label("CurrentRbk_lbl", "CurrentRbk:", 220, y, 80, 20),
+        "CurrentRbk": w.TextUpdate("CurrentRbk", f"{prefix}CurrentRbk", 305, y, 95, 20),
+    })
+    y += 20
+    widgets.update({
         "RampRateV_lbl": w.Label("RampRateV_lbl", "RampRateV:", 20, y, 85, 20),
         "RampRateV": w.TextEntry("RampRateV", f"{prefix}RampRateV", 110, y, 95, 20),
         "RampRateI_lbl": w.Label("RampRateI_lbl", "RampRateI:", 220, y, 80, 20),
         "RampRateI": w.TextEntry("RampRateI", f"{prefix}RampRateI", 305, y, 95, 20),
     })
-    y += 20
+    y += 40
     widgets.update({
-        "OutputVoltage_lbl": w.Label("OutputVoltage_lbl", "Output V:", 20, y, 75, 20),
-        "OutputVoltage": w.TextUpdate("OutputVoltage", f"{prefix}OutputVoltage", 110, y, 95, 20),
-        "OutputCurrent_lbl": w.Label("OutputCurrent_lbl", "Output I:", 220, y, 75, 20),
-        "OutputCurrent": w.TextUpdate("OutputCurrent", f"{prefix}OutputCurrent", 305, y, 95, 20),
-        "GroundCurrent_lbl": w.Label("GroundCurrent_lbl", "Ground I [A]:", 420, y, 75, 20),
-        "GroundCurrent": w.TextUpdate("GroundCurrent", f"{prefix}GroundCurrent", 500, y, 95, 20),
-        "DCLinkVoltage_lbl": w.Label("DCLinkVoltage_lbl", "DC-Link [V]:", 620, y, 70, 20),
-        "DCLinkVoltage": w.TextUpdate("DCLinkVoltage", f"{prefix}DCLinkVoltage", 695, y, 95, 20),
-        "HeatsinkTemp_lbl": w.Label("HeatsinkTemp_lbl", "Heatsink:", 800, y, 70, 20),
-        "HeatsinkTemp": w.TextUpdate("HeatsinkTemp", f"{prefix}HeatsinkTemp", 870, y, 60, 20),
+        "GroundCurrent_lbl": w.Label("GroundCurrent_lbl", "Ground I:", 20, y, 75, 20),
+        "GroundCurrent": w.TextUpdate("GroundCurrent", f"{prefix}GroundCurrent", 110, y, 95, 20),
+        "DCLinkVoltage_lbl": w.Label("DCLinkVoltage_lbl", "DC-Link:", 20, y+20, 70, 20),
+        "DCLinkVoltage": w.TextUpdate("DCLinkVoltage", f"{prefix}DCLinkVoltage", 110, y+20, 95, 20),
+        "HeatsinkTemp_lbl": w.Label("HeatsinkTemp_lbl", "Heatsink:", 20, y+40, 70, 20),
+        "HeatsinkTemp": w.TextUpdate("HeatsinkTemp", f"{prefix}HeatsinkTemp", 110, y+40, 95, 20),
     })
-    y += 20
-    widgets.update({
-        "Limits_lbl": w.Label("Limits_lbl", "Limits:", 20, y, 60, 20),
-        "Limits": w.TextUpdate("Limits", f"{prefix}Limits", 80, y, 120, 20),
-    })
+    # y += 20
+    # widgets.update({
+    #     "Limits_lbl": w.Label("Limits_lbl", "Limits:", 20, y, 60, 20),
+    #     "Limits": w.TextUpdate("Limits", f"{prefix}Limits", 80, y, 120, 20),
+    # })
     widgets.update({"plot": w.DataBrowser("Plot", "caen_fastps.plt", 320, y, 680, 350)})
     y += 80
 
@@ -164,12 +177,12 @@ def main() -> None:
     _add_items(widgets["RampEnable"], "Off, On")
 
     for pv_name in (
-        "Voltage", "Current", "OutputVoltage", "OutputCurrent",
+        "Voltage", "Current", #"OutputVoltage", "OutputCurrent",
         "GroundCurrent", "DCLinkVoltage"):
         widgets[pv_name].format("Engineering")
         widgets[pv_name].precision(3)
 
-    for pv_name in ("HEARTBEAT", "Limits"):
+    for pv_name in ("HEARTBEAT",):
         widgets[pv_name].format("Decimal")
         widgets[pv_name].precision(0)
 

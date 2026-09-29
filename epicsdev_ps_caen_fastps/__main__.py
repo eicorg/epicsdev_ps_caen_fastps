@@ -1,8 +1,10 @@
 """EPICS PVAccess server for CAEN FAST-PS power supply."""
 # pylint: disable=invalid-name,broad-exception-caught
-__version__ = 'v0.0.4 2026-09-08'
+__version__ = 'v0.0.5 2026-09-28'# NAK error codes decoded. Added support for status reset PV.
+#TODO add support for SETFLOAT and PID
 
 import argparse
+from dataclasses import dataclass
 import re
 import socket
 import sys
@@ -10,10 +12,112 @@ import time
 
 from epicsdev import epicsdev as edev
 
+# Definitions of PVs, their types, units, limits, and setter functions are 
+# defined in myPVDefs() function below.
+def myPVDefs():
+    """Return list of PV definitions for CAEN FAST-PS."""
+    # abbreviations for PV definition dictionary keys
+    F, T, U, LL, LH = 'features', 'type', 'units', 'limitLow', 'limitHigh'
+    SET = 'setter'
+    spLimit = SetpointLimits[C_.model]
+
+    pv_defs = [
+['dateTime', 'Server local date/time', 'N/A'],
+['host', 'FAST-PS host', pargs.host],
+['port', 'FAST-PS TCP port', pargs.port, {T: 'u32'}],
+['RegulationMode', 'Selects between voltage/current regulation', ['V', 'I'],
+    {F: 'WD', SET: _set_regulationMode}],
+['Voltage', 'Voltage control (V regulation mode)', 0.0,
+    {F: 'W', U: 'V', LL: spLimit[0], LH: spLimit[1], SET: _set_voltage}],
+['VoltageRbk', 'Voltage readback', 0.0,
+    {F: 'R', U: 'V', LL: spLimit[0], LH: spLimit[1]}],
+['Current', 'Current control (I regulation mode)', 0.0,
+    {F: 'W', U: 'A', LL: spLimit[2], LH: spLimit[3], SET: _set_current}],
+['CurrentRbk', 'Current readback', 0.0,
+    {F: 'R', U: 'A', LL: spLimit[2], LH: spLimit[3]}],
+['StatusReset', 'Reset status register / clear faults', 0,
+    {F: 'W', T: 'u8', LL: 0, LH: 1, SET: _set_status_reset}],
+['RampEnable', 'Enable/disable ramp to setpoint', ['Off', 'On'], {F: 'WD'}],
+['OutputVoltage', 'Output voltage', 0.0,
+    {U: 'V', LL: spLimit[0], LH: spLimit[1]}],
+['OutputCurrent', 'Output current', 0.0,
+    {U: 'A', LL: spLimit[2], LH: spLimit[3]}],
+['GroundCurrent', 'Ground current', 0.0, {U: 'A'}],
+['DCLinkVoltage', 'DC link voltage', 0.0, {U: 'V'}],
+['HeatsinkTemp', 'Heatsink temperature', 0.0, {U: 'C'}],
+['StatusMSB', 'Status MSB', 0, {T: 'u32'}],
+['StatusLSB', 'Status LSB', 0, {T: 'u32'}],
+['Limits', 'Voltage/current limits [MinV, MaxV, MinI, MaxI]', 
+    [0.0, 0.0, 0.0, 0.0]],
+['Model', 'Power supply model', 'N/A'],
+['Version', 'Power supply firmware version', 'N/A'],
+['Enable', 'Turn supply off/on', ['Off', 'On'], {F: 'WD', SET: _set_enable}],
+['instrCmdS', 'Execute custom FAST-PS command', 'VER',
+    {F: 'W', SET: _set_instrCmdS}],
+['instrCmdR', 'Reply to custom FAST-PS command', ''],
+['Upmode', 'Update mode', ['NORMAL', 'ANALOG', 'WAVEFORM', 'SFP'],
+    {F: 'WD', SET: _set_upmode}],
+['RampRateV', 'Ramp rate V/s', 1.0, 
+    {F: 'W', U: 'V/s', LL:1e-6, LH:500.0, SET:_set_rampV_rate}],
+['RampRateI', 'Ramp rate I/s', 1.0,
+    {F: 'W', U: 'A/s', LL:1e-6, LH:500.0, SET:_set_rampI_rate}],
+['ResetStatus', 'Reset status register / clear faults', '?',
+    {F: 'W', SET: _set_status_reset}],
+    ]
+    return pv_defs
+
+#``````````````````Unmutable variables for module state```````````````````````
 DEFAULT_HOST = '130.199.104.57'
 DEFAULT_PORT = 10001
 DEFAULT_TIMEOUT = 2.0
 pargs = None
+NakErrorDescriptions = {
+    '01': 'Unknown command',
+    '02': 'Unknown Parameter',
+    '03': 'Index out of range',
+    '04': 'Not Enough Arguments',
+    '05': 'Privilege Level Requirement not met',
+    '06': 'Save Error on device',
+    '07': 'Invalid password',
+    '08': 'Module in fault',
+    '09': 'Module already ON',
+    '10': 'Setpoint is out of hardware limits',
+    '11': 'Setpoint is out of software limits',
+    '12': 'Setpoint is not a number',
+    '13': 'Module is OFF',
+    '14': 'Slew Rate out of limits',
+    '15': 'Device is set in local mode',
+    '16': 'Module is not in waveform mode',
+    '17': 'Module is in waveform mode',
+    '18': 'Device is set in remote mode',
+    '19': 'Module is already in the selected loop mode',
+    '20': 'Module is not in the selected loop mode',
+    '21': 'Module is not in normal update mode',
+    '22': 'Float mode is already selected',
+    '23': 'Unknown sub-command for SFP communication',
+    '24': 'Unknown feature or feature not available (AIN,TRIG)',
+    '25': 'Parallel Fault',
+    '26': 'Waveform error',
+    '27': 'Cannot open the required file',
+    '28': 'Module is currently inverting the polarity',
+    '29': 'Cannot write waveform data',
+    '30': 'Polarity switch not allowed',
+    '31': 'Cannot set options for socket used by oscilloscope',
+    '32': 'Cannot change settings while in parallel slave mode',
+    '33': 'MASTER and SLAVES have different FW version',
+    '34': 'MASTER and SLAVES are different models',
+    '35': 'MASTER and SLAVES have different ratings',
+    '36': 'The required feature is not available',
+    '37': 'UDP buffer overflow',
+    '38': 'Module is in "Wait for OFF"',
+    '39': 'This field is read only',
+    '40': 'Cannot parse input name for debug field',
+    '41': 'Cannot parse input value for debug field',
+    '42': 'Cannot parse type for debug field',
+    '43': 'DHCP is enabled',
+    '44': 'This command is disabled',
+    '99': 'Unknown error',
+}
 SetpointLimits = {#model: [minV, maxV, minI, maxI]
 'FAST-PS 0520-100': [-20.0, 20.0, -5.0, 5.0],
 'FAST-PS 0540-200': [-40.0, 40.0, -5.0, 5.0],
@@ -25,15 +129,24 @@ SetpointLimits = {#model: [minV, maxV, minI, maxI]
 'FAST-PS 3020-600': [-20.0, 20.0,-30.0, 30.0],
 }
 
+@dataclass(slots=True)
 class C_:
-    """Namespace for module state."""
-    model = "/"
-    sock = None
-    PvDefs = []
+    """Container for module state variables."""
+    model = "/" # model string from VER command
+    sock = None # socket object for TCP connection to FAST-PS
+    PvDefs = [] # list of PV definitions
+    lastStatusUpdate = 0.0 # timestamp of last status update
 
 def handle_exception(where: str):
     """Log exceptions through status/error PVs."""
-    edev.printe(f'{where}: {sys.exc_info()[1]}')
+    excInfo = str(sys.exc_info()[1])
+    nakMatch = re.search(r'NAK\s*:?\s*(\d{1,2})', excInfo, flags=re.IGNORECASE)
+    if nakMatch:
+        code = f'{int(nakMatch.group(1)):02d}'
+        descr = NakErrorDescriptions.get(code, 'Unknown error code')
+        edev.printe(f'{where}: NAK:{code} {descr}')
+        return
+    edev.printe(f'{where}: {excInfo}')
 
 def _connect():
     """Open TCP socket to FAST-PS."""
@@ -66,14 +179,17 @@ def _send(cmd: str, updateStatus = False) -> str:
         raise RuntimeError('Socket is not connected')
 
     wire = f'{cmd}\r'.encode('ascii', errors='ignore')
-    edev.printv(f'Sending command: {cmd!r} -> {wire!r}, updateStatus={updateStatus}')
+    edev.printv(f'Sending command: {cmd!r}, updateStatus={updateStatus}')
     C_.sock.sendall(wire)
     reply = _read_line()
     if not reply:
         raise RuntimeError(f'Empty reply for command {cmd!r}')
     if updateStatus:
-        edev.publish('status', '')# clear status before sending command
-        _query_status()
+        #edev.publish('status', '')# clear status before sending command
+        ts = time.time()
+        if ts - C_.lastStatusUpdate > 1.0:
+            C_.lastStatusUpdate = ts
+            _query_status()
     return reply
 
 def _is_ack(reply: str) -> bool:
@@ -140,7 +256,7 @@ def _query_status():
     except Exception:
         handle_exception('in _query_status')
 
-def set_regulationMode(value, *_):
+def _set_regulationMode(value, *_):
     try:
         if edev.pvv('Enable') == 1:
             raise RuntimeError('Cannot change regulation mode while supply is enabled')
@@ -151,7 +267,7 @@ def set_regulationMode(value, *_):
             raise RuntimeError(f'Unexpected reply for LOOP: {reply}')
         edev.publish('RegulationMode', mode, ifChanged=True)
     except Exception:
-        handle_exception('in set_regulationMode')
+        handle_exception('in _set_regulationMode')
 
 
 def _set_setpoint(value: float, kind: str):
@@ -162,23 +278,23 @@ def _set_setpoint(value: float, kind: str):
     if not _is_ack(reply):
         raise RuntimeError(f'Unexpected reply for {cmd}: {reply}')
 
-def set_voltage(value, *_):
+def _set_voltage(value, *_):
     try:
         voltage = float(value)
         _set_setpoint(voltage, 'V')
         edev.publish('Voltage', voltage, ifChanged=True)
     except Exception:
-        handle_exception('in set_voltage')
+        handle_exception('in _set_voltage')
 
-def set_current(value, *_):
+def _set_current(value, *_):
     try:
         current = float(value)
         _set_setpoint(current, 'I')
         edev.publish('Current', current, ifChanged=True)
     except Exception:
-        handle_exception('in set_current')
+        handle_exception('in _set_current')
 
-def set_enable(value, *_):
+def _set_enable(value, *_):
     try:
         on = str(value).upper() in ('1', 'ON', 'TRUE')
         cmd = 'MON' if on else 'MOFF'
@@ -187,21 +303,9 @@ def set_enable(value, *_):
             raise RuntimeError(f'Unexpected reply for {cmd}: {reply}')
         edev.publish('Enable', 1 if on else 0, ifChanged=True)
     except Exception:
-        handle_exception('in set_enable')
+        handle_exception('in _set_enable')
 
-
-def set_status_reset(value, *_):
-    try:
-        v = str(value).upper()
-        if v in ('1', 'ON', 'TRUE'):
-            reply = _send('MRESET', updateStatus=True)
-            if not _is_ack(reply):
-                raise RuntimeError(f'Unexpected reply for MRESET: {reply}')
-        edev.publish('StatusReset', 0, ifChanged=True)
-    except Exception:
-        handle_exception('in set_status_reset')
-
-def set_instrCmdS(cmd, *_):
+def _set_instrCmdS(cmd, *_):
     try:
         text = str(cmd).strip()
         if text == '':
@@ -209,9 +313,9 @@ def set_instrCmdS(cmd, *_):
         reply = _send(text, updateStatus=True)
         edev.publish('instrCmdR', reply)
     except Exception:
-        handle_exception('in set_instrCmdS')
+        handle_exception('in _set_instrCmdS')
 
-def set_upmode(value, *_):
+def _set_upmode(value, *_):
     try:
         mode = str(value).strip().upper()
         if mode not in ('NORMAL', 'ANALOG', 'WAVEFORM', 'SFP'):
@@ -221,9 +325,9 @@ def set_upmode(value, *_):
             raise RuntimeError(f'Unexpected reply for UPMODE: {reply}')
         edev.publish('Upmode', mode, ifChanged=True)
     except Exception:
-        handle_exception('in set_upmode')
+        handle_exception('in _set_upmode')
 
-def set_rampV_rate(value, *_):
+def _set_rampV_rate(value, *_):
     try:
         rate = float(value)
         reply = _send(f'MSRV:{rate}', updateStatus=True)
@@ -231,9 +335,9 @@ def set_rampV_rate(value, *_):
             raise RuntimeError(f'Unexpected reply for MSRV: {reply}')
         edev.publish('RampRateV', rate, ifChanged=True)
     except Exception:
-        handle_exception('in set_rampV_rate')
+        handle_exception('in _set_rampV_rate')
 
-def set_rampI_rate(value, *_):
+def _set_rampI_rate(value, *_):
     try:
         rate = float(value)
         reply = _send(f'MSRI:{rate}', updateStatus=True)
@@ -241,44 +345,18 @@ def set_rampI_rate(value, *_):
             raise RuntimeError(f'Unexpected reply for MSRI: {reply}')
         edev.publish('RampRateI', rate, ifChanged=True)
     except Exception:
-        handle_exception('in set_rampI_rate')
+        handle_exception('in _set_rampI_rate')
 
-def myPVDefs():
-    """PV definitions similar to ioc/fastps.db records."""
-    F, T, U, LL, LH, SET = 'features', 'type', 'units', 'limitLow', 'limitHigh', 'setter'
-
-    pv_defs = [
-        ['dateTime', 'Server local date/time', 'N/A'],
-        ['host', 'FAST-PS host', pargs.host],
-        ['port', 'FAST-PS TCP port', pargs.port, {T: 'u32'}],
-        ['RegulationMode', 'Selects between voltage/current regulation', ['V', 'I'], {F: 'WD', SET: set_regulationMode}],
-        ['Voltage', 'Voltage control (V regulation mode)', 0.0, {F: 'W', U: 'V',
-            LL: SetpointLimits[C_.model][0], LH: SetpointLimits[C_.model][1], SET: set_voltage}],
-        ['Current', 'Current control (I regulation mode)', 0.0, {F: 'W', U: 'A',
-            LL: SetpointLimits[C_.model][2], LH: SetpointLimits[C_.model][3], SET: set_current}],
-        ['StatusReset', 'Reset status register / clear faults', 0, {F: 'W', T: 'u8', LL: 0, LH: 1, SET: set_status_reset}],
-        ['RampEnable', 'Enable/disable ramp to setpoint', ['Off', 'On'], {F: 'WD'}],
-        ['OutputVoltage', 'Output voltage', 0.0, {U: 'V'}],
-        ['OutputCurrent', 'Output current', 0.0, {U: 'A'}],
-        ['GroundCurrent', 'Ground current', 0.0, {U: 'A'}],
-        ['DCLinkVoltage', 'DC link voltage', 0.0, {U: 'V'}],
-        ['HeatsinkTemp', 'Heatsink temperature', 0.0, {U: 'C'}],
-        ['StatusMSB', 'Status MSB', 0, {T: 'u32'}],
-        ['StatusLSB', 'Status LSB', 0, {T: 'u32'}],
-        ['Limits', 'Voltage/current limits [MinV, MaxV, MinI, MaxI]', [0.0, 0.0, 0.0, 0.0]],
-        ['Model', 'Power supply model', 'N/A'],
-        ['Version', 'Power supply firmware version', 'N/A'],
-        ['Enable', 'Turn supply off/on', ['Off', 'On'], {F: 'WD', SET: set_enable}],
-        ['instrCmdS', 'Execute custom FAST-PS command', 'VER', {F: 'W', SET: set_instrCmdS}],
-        ['instrCmdR', 'Reply to custom FAST-PS command', ''],
-        ['ReadbackPoll_.SCAN', 'Readback polling period',# it is not necessary because the polling period is defined by 'sleep' PV, it is kept for compatibility with original IOC
-            ['1.0','0.5','0.2','0.1','0.01','2','5','10'], {F: 'WD', U: 's',
-            SET: lambda v, *_: edev.publish('sleep', float(v), ifChanged=True)}],
-        ['Upmode', 'Update mode', ['NORMAL', 'ANALOG', 'WAVEFORM', 'SFP'], {F: 'WD', SET: set_upmode}],
-        ['RampRateV', 'Ramp rate V/s', 1.0, {F: 'W', U: 'V/s', LL:1e-6, LH:500.0, SET:set_rampV_rate}],
-        ['RampRateI', 'Ramp rate I/s', 1.0, {F: 'W', U: 'A/s', LL:1e-6, LH:500.0, SET:set_rampI_rate}],
-    ]
-    return pv_defs
+def _set_status_reset(value, *_):
+    try:
+        v = str(value).upper()
+        if v in ('1', 'ON', 'TRUE'):
+            reply = _send('MRESET', updateStatus=True)
+            if not _is_ack(reply):
+                raise RuntimeError(f'Unexpected reply for MRESET: {reply}')
+        edev.publish('StatusReset', 0, ifChanged=True)
+    except Exception:
+        handle_exception('in _set_status_reset')
 
 def refresh_static():
     """Read static identification and setpoint values."""
@@ -294,6 +372,8 @@ def poll():
     edev.publish('GroundCurrent', _query_float('MGC', edev.pvv('GroundCurrent')), ifChanged=True)
     edev.publish('DCLinkVoltage', _query_float('MRP', edev.pvv('DCLinkVoltage')), ifChanged=True)
     edev.publish('HeatsinkTemp', _query_float('MRT', edev.pvv('HeatsinkTemp')), ifChanged=True)
+    edev.publish('VoltageRbk', _query_float('MWV:?', edev.pvv('VoltageRbk')), ifChanged=True)
+    edev.publish('CurrentRbk', _query_float('MWI:?', edev.pvv('CurrentRbk')), ifChanged=True)
 
 def periodic_update():
     """Slow periodic update hook."""
@@ -315,18 +395,27 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        epilog=__version__,
+        epilog=f'{__version__}, epicsdev:{edev.__version__}',
     )
-    parser.add_argument('-a', '--autosave', nargs='?', default='', help='Autosave control. If omitted, autosave is enabled with default directory.')
-    parser.add_argument('-c', '--recall', action='store_false', help='If given: do not restore initial PV values from autosave cache.')
-    parser.add_argument('-d', '--device', default='caen_fastps', help='Device name, the PV prefix is <device><index>:')
-    parser.add_argument('-i', '--index', default='0', help='Device index, the PV prefix is <device><index>:')
-    parser.add_argument('-p', '--putlogPV', nargs='?', default='', help='PV name for logging put operations. Empty means default putlog:dump.')
-    parser.add_argument('-v', '--verbose', action='count', default=0, help='Increase verbosity (-vv for more).')
+    parser.add_argument('-a', '--autosave', nargs='?', default='', help=
+'Autosave control. If omitted, autosave is enabled with default directory.')
+    parser.add_argument('-c', '--recall', action='store_false', help=
+'If given: do not restore initial PV values from autosave cache.')
+    parser.add_argument('-d', '--device', default='caen_fastps:', help=
+'Device name, the PV prefix is <device><index>:')
+    parser.add_argument('-i', '--index', default='0', help=
+'Device index, the PV prefix is <device><index>:')
+    parser.add_argument('-p', '--putlogPV', nargs='?', default='', help=
+'PV name for logging put operations. Empty means default putlog:dump.')
+    parser.add_argument('-v', '--verbose', action='count', default=0, help=
+'Increase verbosity (-vv for more).')
 
-    parser.add_argument('--host', default=DEFAULT_HOST, help='FAST-PS host name or IP address')
-    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help='FAST-PS TCP port')
-    parser.add_argument('--timeout', type=float, default=DEFAULT_TIMEOUT, help='TCP timeout in seconds')
+    parser.add_argument('--host', default=DEFAULT_HOST, help=
+'FAST-PS host name or IP address')
+    parser.add_argument('--port', type=int, default=DEFAULT_PORT, help=
+'FAST-PS TCP port')
+    parser.add_argument('--timeout', type=float, default=DEFAULT_TIMEOUT, help=
+'TCP timeout in seconds')
 
     pargs = parser.parse_args()
     if pargs.putlogPV == '':
@@ -355,15 +444,21 @@ if __name__ == '__main__':
     edev.set_server('Start')
 
     server = edev.Server(providers=[PVs])
-    edev.printi(f'Server for {pargs.prefix} started. Sleeping per cycle: {repr(edev.pvv("sleep"))} S.')
-    while True:
-        state = edev.serverState()
-        if state.startswith('Exit'):
-            break
-        if not state.startswith('Stop'):
-            poll()
-        if not edev.sleep():
-            periodic_update()
+    edev.printi((f'Server for {pargs.prefix} started. Sleeping per cycle: '
+                 f'{repr(edev.pvv("sleep"))} S.'))
+
+    try:
+        while True:
+            state = edev.serverState()
+            if state.startswith('Exit'):
+                break
+            if not state.startswith('Stop'):
+                poll()
+            if not edev.sleep():
+                periodic_update()
+    except KeyboardInterrupt:
+        edev.printi('Keyboard interrupt received, exiting main loop...')
+        edev.set_server('Exit')
 
     try:
         if C_.sock is not None:
