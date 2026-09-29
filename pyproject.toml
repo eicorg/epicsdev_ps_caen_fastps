@@ -1,6 +1,6 @@
 [project]
 name = "epicsdev_ps_caen_fastps"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Andrey Sukhanov", email="sukhanov@bnl.gov" },
 ]
@@ -13,7 +13,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "epicsdev>=1.0.2",
+  "epicsdev>=3.3.2",
 ]
 
 [project.optional-dependencies]
@@ -25,5 +25,6 @@ opi = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project.urls]
 "Homepage" = "https://github.com/eicorg/epicsdev_ps_caen_fastps"
 "Bug Tracker" = "https://github.com/eicorg/epicsdev_ps_caen_fastps"
